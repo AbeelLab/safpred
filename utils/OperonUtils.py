@@ -1,32 +1,7 @@
-def EditOperonDB(outfile, clusterdbpath, operondbpath, keepclusters, maxintergenicdist=300, addsingletons=True):
+def EditOperonDB(outfile, operondbpath, keepclusters, maxintergenicdist=300, addsingletons=True):
 
-    import numpy as np
     import pandas as pd
-    import pickle
     from copy import deepcopy
-    from tqdm import tqdm
-    from Bio import SeqIO
-
-    from utils import SeqUtils
-
-    tqdm.pandas()
-
-
-    cdf = pd.read_pickle('clusterdbpath')
-    cdf.update(cdf.members.apply(lambda x: x.split(';')))
-    cdf.update(cdf.members_contig.apply(lambda x: x.split(';')))
-    cdf.update(cdf.members_genbank.apply(lambda x: x.split(';')))
-
-    # Load cluster metadata
-    print("Loading base stats")
-    with open('../data/operondb/basestats.pkl.gz', 'rb') as f:
-        basestats = pickle.load(f)
-    gene2pos = basestats['gene2pos']
-    gene2cluster = basestats['gene2cluster']
-    gene2contig = basestats['gene2contig']
-    contig2len = basestats['contig2len']
-    cluster2genes = basestats['cluster2genes']
-    allclusters = set(cluster2genes.keys())
 
     print("Loading the original operon database")
     opdf = pd.read_pickle(operondbpath)
@@ -40,7 +15,7 @@ def EditOperonDB(outfile, clusterdbpath, operondbpath, keepclusters, maxintergen
     totremove = 0
     for i,(opnum,row) in enumerate(nropdf.iterrows()):
         if i % 1e4 == 0:
-            # print("Finished {:.2f}% of the potential operons".format(i/totdone*100))
+            print("Finished {:.2f}% of the potential operons".format(i/totdone*100))
         keepidx = []
         keepcnum = []
         for idx,cnum in enumerate(row.operon):
@@ -78,7 +53,7 @@ def EditOperonDB(outfile, clusterdbpath, operondbpath, keepclusters, maxintergen
         addintd = []
         for j,(c1,c2) in enumerate(zip(row.operon,row.operon[1:])):
             intd = row.minintergenicdist[j]
-            if intd <= maxdist:
+            if intd <= maxintergenicdist:
                 if len(addop)==0:
                     addop.append(c1)
                 addop.append(c2)
@@ -95,14 +70,15 @@ def EditOperonDB(outfile, clusterdbpath, operondbpath, keepclusters, maxintergen
     newopdf = pd.DataFrame(newopdict.values(), index=newopdict.keys())
     if addsingletons:
     # Need to add the singleton operons
-    singletons = smallopdf[smallopdf.apply(lambda x: (x.oplen==1) and (x.operon[0] in keepclusters), axis=1)].copy()
-    ss = singletons.copy()
-    ss.update(ss.operon.apply(lambda x: tuple(x)[0]))
-    ss.drop_duplicates('operon', inplace=True)
-    ss.update(ss.operon.apply(lambda x: [x]))
-    ss.rename(columns={'minintergenicdist': 'intergenicdist'}, inplace=True)
+        singletons = smallopdf[smallopdf.apply(lambda x: (x.oplen==1) and (x.operon[0] in keepclusters), axis=1)].copy()
+        ss = singletons.copy()
+        ss.update(ss.operon.apply(lambda x: tuple(x)[0]))
+        ss.drop_duplicates('operon', inplace=True)
+        ss.update(ss.operon.apply(lambda x: [x]))
+        ss.rename(columns={'minintergenicdist': 'intergenicdist'}, inplace=True)
+        newopdf.loc[:,'oplen'] = newopdf.operon.apply(lambda x: len(x))
+        newopdf = newopdf.append(ss, ignore_index=True)
     newopdf.loc[:,'oplen'] = newopdf.operon.apply(lambda x: len(x))
-    newopdf = newopdf.append(ss, ignore_index=True)
     
     print("Saving the new operon database")
     newopdf.to_pickle(outfile)
