@@ -6,9 +6,11 @@ In this repository the scripts we used to run and evaluate SAP.
 ### Dependencies
 
 ### Data
+- The latest release of GO ontology can be downloaded from [the Gene Ontology website](http://geneontology.org/).
+  - To reproduce our results, use release 2021-11-16 from the GO archives.
 - You can download the SWISSPROT data used to evaluate SAP [from the UniProt website](https://www.uniprot.org/help/downloads). 
   - To reproduce the results, use release 2021-04 from the [previous releases page](https://ftp.uniprot.org/pub/databases/uniprot/previous_releases/).
-  - You can run the script `GetSPROT.py' to download and process the data to apply the filtering procedure as we describe in the manuscript.
+  - You can run the script `GetSPROT.py` to download and process the data to apply the filtering procedure as we describe in the manuscript.
     1. Sequence length is kept within [40,1000]
     2. Proteins with at least one experimental GO annotation are retained (evidence codes: EXP, IDA, IPI, IMP, IGI, IEP, HTP, HDA, HMP, HGI, HEP, IBA, IBD, IKR, IRD, IC, TAS).
   - `GetSPROT.py` will create 2 text files:
