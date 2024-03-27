@@ -1,14 +1,14 @@
-# SAP: Synteny-aware gene function prediction for bacteria using protein embeddings
-SAP is a novel synteny-aware gene function prediction tool based on protein embeddings, to annotate bacterial species. SAP distinguishes itself from existing methods for annotating bacteria in two ways: (i) it uses embedding vectors extracted from state-of-the-art protein language models and (ii) it incorporates conserved synteny across the entire bacterial kingdom using a novel operon-based approach proposed in our work.
+# SAFPred: Synteny-aware gene function prediction for bacteria using protein embeddings
+SAP is a novel synteny-aware gene function prediction tool based on protein embeddings, to annotate bacterial species. SAFPred distinguishes itself from existing methods for annotating bacteria in two ways: (i) it uses embedding vectors extracted from state-of-the-art protein language models and (ii) it incorporates conserved synteny across the entire bacterial kingdom using a novel synteny-based approach proposed in our work.
 
-In this repository the scripts we used to run and evaluate SAP.
+In this repository the scripts we used to run and evaluate SAFPred.
 
 ### Dependencies
 
 ### Data
 - The latest release of GO ontology can be downloaded from [the Gene Ontology website](http://geneontology.org/).
   - To reproduce our results, use release 2021-11-16 from the GO archives.
-- You can download the SWISSPROT data used to evaluate SAP [from the UniProt website](https://www.uniprot.org/help/downloads). 
+- You can download the SWISSPROT data used to evaluate SAFPred [from the UniProt website](https://www.uniprot.org/help/downloads). 
   - To reproduce the results, use release 2021-04 from the [previous releases page](https://ftp.uniprot.org/pub/databases/uniprot/previous_releases/).
   - You can run the script `GetSPROT.py` to download and process the data to apply the filtering procedure as we describe in the manuscript.
     1. Sequence length is kept within [40,1000]
