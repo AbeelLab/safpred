@@ -38,3 +38,22 @@ def calc_intergenic_dist(pos1, pos2, contig_len=None):
         d = abs(corpos2[0] - corpos1[1])
 
     return d
+
+def load_annot_file(annot_file_path):
+    """
+    Parse tabular annotation file mapping protein IDs to go terms
+    Input: tsv file path
+    Returns a dictionary mapping protein sequence IDs to go terms
+    """
+    # Obsolete go terms are removed
+    obsolete_terms = {'GO:0052312', 'GO:1902586', 'GO:2000775'}
+    annot_df = pd.read_csv(annot_file_path, sep="\t", na_filter=False)
+    annot_map = dict()
+
+    for row in annot_df.itertuples():
+        seq_id = row.id
+        go_terms = np.array([str(i) for i in row.go_exp.split(';') if str(i) != obsolete_terms])
+        # goterms = np.array([str(i) for i in row.go_exp.split(';')])
+        annot_map[seq_id] = go_terms
+
+    return annot_map
