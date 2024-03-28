@@ -14,6 +14,56 @@ from utils import SeqUtils, SAPUtils
 tqdm.pandas()
 
 
+import argparse
+import os
+import pickle
+from copy import deepcopy
+from tqdm import tqdm
+from Bio import SeqIO
+from utils import seq_utils, safpred_utils
+
+def main():
+    parser = argparse.ArgumentParser(description = 'run SAFPred')
+    parser.add_argument('--train_seq', '-i', type=str, required=True, 
+                        help = 'Path to the training set sequences file in fasta format')
+    parser.add_argument('--test_seq', '-t', type=str, required=True, 
+                        help = 'Path to the test set sequences file in fasta format')   
+    parser.add_argument('--annot_file', '-a', type=str, required=True, 
+                        help = 'Path to the annotation file, mapping all proteins (train and test) to GO terms')    
+    parser.add_argument('--db_file', '-d', type=str, required=True, 
+                        help = 'Path to the synteny database file')
+    parser.add_argument('--emb_model', '-e', type=str, required=True, 
+                        help = 'Embedding model: "esm", "t5" or "none". which requires train and test embedding files as input')
+    parser.add_argument('--train_emb_file', '-f', type=str, default=None, 
+                        help = 'Path to the training embeddings, required only if you want to use your own')
+    parser.add_argument('--test_emb_file', '-g', type=str, default=None, 
+                        help = 'Path to the test embeddings, required only if you want to use your own')
+    parser.add_argument('--norm_sim', '-n', type=bool, default=True, 
+                        help = 'Normalize NN similarities. Default is True')     
+    parser.add_argument('--output_dir', '-o', type=str, required=True, 
+                        help='Output directory where the database will be stored')
+    parser.add_argument('--max_dist', '-r', type=int, default = 300, 
+                        help='Maximum distance allowed within a syntenic region. Default is 5000')
+    parser.add_argument('--max_intergenic_dist', '-g', type=int, default=300, 
+                        help='Maximum intergenic distance allowed within a syntenic region. Default is 300')
+
+    args = parser.parse_args()
+    args.out = args.out[0]
+    print(args.out)
+    input_dir = args.input_dir
+    output_dir = args.output_dir
+    max_dist = args.max_dist
+    max_intergenic_dist = args.max_intergenic_dist
+
+
+usemaxoperon = True
+normsimilarity = True
+keepsingletons = True
+thset = 'all'
+nnset = 'all'
+percentile = [99.999]
+embmodel = 'esm1b'
+
 embmodel = 'esm'
 
 with open('data/goa/go_classes.pkl', 'rb') as f:
