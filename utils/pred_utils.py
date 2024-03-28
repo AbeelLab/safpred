@@ -40,7 +40,7 @@ def naive_predictor(annot_file_path, train_proteins, test_proteins):
     
     return predictions
 
-def PredictFromBlast(blast_df, annot_file_path, test_proteins):
+def blast_baseline(blast_df, annot_file_path, test_proteins):
     """
     Run the baseline BLAST predictor based on the max % identity approach    
     Parameters
@@ -80,97 +80,99 @@ def PredictFromBlast(blast_df, annot_file_path, test_proteins):
                 
     return predictions
 
-def normalize_prediction(predictions, go_classes):
+def normalize_predictions(predictions, go_classes):
     """ Helper function to normalize predictions within a GO ontology class
     """
-    normpredictions = deepcopy(predictions)
-    minprob = dict()
-    maxprob = dict()
+    norm_predictions = deepcopy(predictions)
+    min_prob = dict()
+    max_prob = dict()
     for category in ["MF", "CC", "BP"]:
-        minprob[category] = 2
-        maxprob[category] = -2
+        min_prob[category] = 2
+        max_prob[category] = -2
 
-    for queryprotID, querypred in normpredictions.items():
+    for query_id, query_pred in norm_predictions.items():
         # Determine range of prediction probabilities
-        for goterm, probability in querypred.items():
-            category = goclasses[goterm]
-            minprob[category] = min(minprob[category], probability)
-            maxprob[category] = max(maxprob[category], probability)
+        for go_term, go_prob in query_pred.items():
+            category = go_classes[go_term]
+            min_prob[category] = min(min_prob[category], go_prob)
+            max_prob[category] = max(max_prob[category], go_prob)
 
     # Normalize per class
-    for queryprotID, querypred in normpredictions.items():
-        for goterm, probability in querypred.items():
-            category = goclasses[goterm]
-            if (minprob[category] < 2) and (abs(maxprob[category] - minprob[category]) > 0.0000000001):
-                normpredictions[goterm] = (probability - minprob[category]) / (maxprob[category] - minprob[category])
-    return normpredictions
+    for query_id, query_pred in norm_predictions.items():
+        for go_term, go_prob in query_pred.items():
+            category = go_classes[go_term]
+            if (min_prob[category] < 2) and (abs(max_prob[category] - min_prob[category]) > 0.0000000001):
+                norm_predictions[go_term] = (go_prob - min_prob[category]) / (max_prob[category] - min_prob[category])
+    return norm_predictions
 
-def GetEmbeddings(testfile, trainfile, percentile=99.999):
+def load_embeddings(train_file_path, test_file_path, percentile=99.999):
     """
     Extract embeddings for train and test proteins from pickle files
     Input: test and train embeddings pickle file paths
-    Returns train and test embeddings dicitonary mapping protein IDs to embedding vectors
+    Returns train and test embeddings dictionary mapping protein IDs to embedding vectors
     """
-    with open(testfile, "rb") as f:
-        testembeddings = pickle.load(f)
-    with open(trainfile, "rb") as f:
-        trainembeddings = pickle.load(f)
-    return testembeddings, trainembeddings
+    with open(train_file_path, "rb") as f:
+        train_embeddings = pickle.load(f)
+    with open(test_file_path, "rb") as f:
+        test_embeddings = pickle.load(f)        
+    return train_embeddings, test_embeddings
 
-def CreateTrainMatrix(trainembeddings):
-    numemb = len(trainembeddings)
-    embsize = len(list(trainembeddings.values())[0])
+def create_train_matrix(train_embeddings):
+    num_emb = len(train_embeddings)
+    emb_size = len(list(train_embeddings.values())[0])
 
-    embmatrix = np.zeros((numemb, embsize))
+    emb_matrix = np.zeros((num_emb, emb_size))
 
-    ID2row = dict()
+    id2row = dict()
 
-    for i, (trainprotID,trainemb) in enumerate(trainembeddings.items()):
-        embmatrix[i] = trainemb
-        ID2row[trainprotID] = i
+    for i, (train_id, train_emb) in enumerate(train_embeddings.items()):
+        emb_matrix[i] = train_emb
+        id2row[train_id] = i
 
-    return embmatrix/np.linalg.norm(embmatrix, axis=1, keepdims=True), ID2row  
+    return emb_matrix/np.linalg.norm(emb_matrix, axis=1, keepdims=True), id2row  
 
-def RunKNN(tsvfile, testfile, trainfile, percentile=99.0):
-    from utils import SeqUtils
-    annotmap = SeqUtils.ParseTSV(tsvfile)
-    testembeddings, trainembeddings = GetEmbeddings(testfile, trainfile)
+def SAFPrednn(annot_file_path, train_file_path, test_file_path, percentile=99.0):
+    from utils import seq_utils
+    
+    annot_map = seq_utils.load_annot_file(annot_file_path)
+    train_embeddings, test_embeddings = load_embeddings(train_file_path, test_file_path)
 
-    embeddingmatrix, ID2row = CreateTrainMatrix(trainembeddings)
+    train_emb_matrix, id2row = create_train_matrix(train_embeddings)
     
     # Iterate over test set and make predictions
-    testsize = len(testembeddings)
+    num_test = len(test_embeddings)
     predictions = dict()
 
-    for i,(queryprotID, queryemb) in enumerate(testembeddings.items()):
+    for i, (query_id, query_emb) in enumerate(test_embeddings.items()):
         if i % 1e3 == 0:
-            print("Predicted {} out of {} -- {} to go".format(i,testsize,testsize-i))
+            print("Predicted {} out of {} -- {} to go".format(i, num_test, num_test - i))
    
         # To each test protein, associate a dictionary of GO terms and their associated probabilities
-        gopred = dict()
+        go_pred = dict()
 
         # Determine similarities
-        dotproducts = np.matmul(embeddingmatrix, queryemb)
-        similarities = dotproducts / np.linalg.norm(queryemb)
+        dot_products = np.matmul(train_emb_matrix, query_emb)
+        similarities = dot_products / np.linalg.norm(query_emb)
 
         t = np.percentile(similarities, percentile)
 
-        for trainprotID, trainemb in trainembeddings.items():
-            similarity = similarities[ID2row[trainprotID]]
+        for train_id, train_emb in train_embeddings.items():
+            similarity = similarities[id2row[train_id]]
 
             # Only consider neighbors with similarity over the threshold
             if similarity >= t:
                 # Fetch GO terms associated with train protein
-                trainprotgoterms = annotmap[trainprotID]
+                train_prot_goterms = annotmap[train_id]
 
                 # Iterate over the train protein go terms
-                for goterm in trainprotgoterms:
-                    if goterm in gopred:
+                for go_term in train_prot_goterms:
+                    if go_term in go_pred:
                         # If this GO term has been predicted before, store the maximum similarity
-                        gopred[goterm] = max(gopred[goterm], similarity)
+                        go_pred[go_term] = max(go_pred[go_term], similarity)
                     else:
-                        gopred[goterm] = similarity
+                        go_pred[go_term] = similarity
 
         # Make prediction for this test protein
-        predictions[queryprotID] = gopred
+        predictions[query_id] = go_pred
+        
     return predictions
