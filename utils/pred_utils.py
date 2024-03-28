@@ -2,59 +2,87 @@ import numpy as np
 from copy import deepcopy
 import pickle
 
-def NaivePredictor(tsvfile, trainproteins, testproteins):
+def naive_predictor(annot_file_path, train_proteins, test_proteins):
     """
     Run the baseline naive predictor. It's simply the frequency of each GO term
     in the training set
-    Input: proteins in the training set and proteins in the test set
-    Returns naive predictions
+    
+    Parameters
+    ----------
+    annot_file_path : str
+        Path to tabular annotation file, maps protein IDs to GO term annotations
+    train_proteins : list
+        List of proteins in the training set
+    test_proteins : list
+        List of proteins in the test set
+
+    Returns
+    -------
+    predictions : dict
+        A dictionary of predictions, maps protein IDs to predicted GO terms and their probability
     """
-    from utils import SeqUtils
-    annotmap = SeqUtils.ParseTSV(tsvfile)
-    numtrainproteins = float(len(trainproteins))
+    
+    from utils import seq_utils
+    annot_map = seq_utils.load_annot_file(annot_file_path)
+    num_trainproteins = float(len(train_proteins))
     # Collect go term frequencies
-    gopred = dict()
-    for prot in trainproteins:
-        for goterm in annotmap.get(prot,[]):
-            if goterm in gopred.keys():
-                gopred[goterm] = gopred[goterm] + float(1.0 / numtrainproteins)
+    go_pred = dict()
+    for prot in train_proteins:
+        for go_term in annot_map.get(prot, []):
+            if go_term in go_pred.keys():
+                go_pred[go_term] = go_pred[go_term] + float(1.0 / num_trainproteins)
             else:
-                gopred[goterm] = float(1.0 / numtrainproteins)    
+                go_pred[go_term] = float(1.0 / num_trainproteins)    
     # Create the predictions dictionary
     predictions = dict()
-    for queryid in testproteins:
-        predictions[queryid] = gopred
+    for query_id in test_proteins:
+        predictions[query_id] = go_pred
     
     return predictions
 
-def PredictFromBlast(blastdf, annotmap, alltestIDs):
+def PredictFromBlast(blast_df, annot_file_path, test_proteins):
     """
-    Run baseline BLAST predictor based on the max % identity approach
-    Input: tabular output file from running blast against a database, dictionary
-    mapping sequence IDs to go terms, list of sequence IDs of proteins in the test set
-    Returns baseline BLAST predictions 
-    """
-    predictions = dict()
-    for _,row in blastdf.iterrows():
-        queryID = row['queryid']
-        trainID = row['targetid']
-        pident = float(row['pident']) / 100.0 
-        if queryID not in predictions:
-            predictions[queryID] = dict()       
-        traingoterms = annotmap[trainID]
-        for goterm in traingoterms:
-            if goterm not in predictions[queryID]:
-                predictions[queryID][goterm] = pident
-            else:
-                predictions[queryID][goterm] = max(pident, predictions[queryID][goterm])
+    Run the baseline BLAST predictor based on the max % identity approach    
+    Parameters
+    ----------
+    blast_df : pandas Dataframe
+        Dataframe of running blastp against the training set
+    annot_file_path : str    
+        Path to tabular annotation file, maps protein IDs to GO term annotations
+    test_proteins : list
+        List of proteins in the test set
 
-    for queryID in alltestIDs:
-        if queryID not in predictions:
-            predictions[queryID] = dict()
+    Returns
+    -------
+    predictions : dict
+        A dictionary of predictions, maps protein IDs to predicted GO terms and their probability
+    """
+    from utils import seq_utils
+    annot_map = seq_utils.load_annot_file(annot_file_path)
+    
+    predictions = dict()
+    for _, row in blast_df.iterrows():
+        query_id = row['queryid']
+        train_id = row['targetid']
+        pident = float(row['pident']) / 100.0 
+        if query_id not in predictions:
+            predictions[query_id] = dict()       
+        train_go_terms = annot_map[train_id]
+        for go_term in train_go_terms:
+            if go_term not in predictions[query_id]:
+                predictions[query_id][go_term] = pident
+            else:
+                predictions[query_id][go_term] = max(pident, predictions[query_id][go_term])
+
+    for query_id in test_proteins:
+        if query_id not in predictions:
+            predictions[query_id] = dict()
                 
     return predictions
 
-def NormalizePredictions(predictions, goclasses):
+def normalize_prediction(predictions, go_classes):
+    """ Helper function to normalize predictions within a GO ontology class
+    """
     normpredictions = deepcopy(predictions)
     minprob = dict()
     maxprob = dict()
