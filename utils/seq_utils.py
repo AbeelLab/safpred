@@ -70,3 +70,106 @@ def get_seq_id(fasta_file_path):
         seq_ids.append(seq_id)
 
     return seq_ids
+
+def download_sprot(output_dir, release='current'):
+    """
+    Download a specific release of the SwissProt database, it will fetch both the protein sequences
+    and their metadata
+
+    Parameters
+    ----------
+    output_dir : str
+        Directory to write the protein sequences in a fasta file and their metadata in a tabular file
+        using the prefix "sprot_db_<release>"
+    release : str
+        SwissProt database release to download. Default is "current"
+
+    Returns
+    -------
+    None.    
+    """
+    import gzip
+    import wget
+    import pandas as pd
+    from Bio import SeqIO
+    from Bio.SeqRecord import SeqRecord
+
+    if release == 'current':
+        sprot_url = 'ftp://ftp.uniprot.org/pub/databases/uniprot/current_release/knowledgebase/complete/uniprot_sprot.dat.gz'
+        go_url = 'http://purl.obolibrary.org/obo/go.obo'       
+        wget.download(sprot_url, out='data/uniprot/uniprot_sprot.dat.gz')
+        wget.download(go_url, out='data/goa/go.obo')
+    else:
+        print("This script doesn't work for any releases other than current yet --- TODO")
+        return
+    
+    
+    exp_codes = ['EXP','IDA','IPI','IMP','IGI','IEP','HTP','HDA','HMP','HGI',
+                 'HEP','IBA','IBD','IKR','IRD','IC','TAS']
+    prot_list = []
+    acc_list = []
+    seq_list = []
+    annot_list = []
+    with gzip.open('data/uniprot/uniprot_sprot.dat.gz', 'rt') as f:
+        prot = ''
+        acc = ''
+        seq = ''
+        annots = []
+        for line in f:
+            flds = line.strip().split('   ')
+            if (flds[0].lower() == 'id') and (len(flds) > 1): # found a new protein entry
+                if len(prot) > 0: # but first, save the entry from previous iteration
+                    prot_list.append(prot)
+                    acc_list.append(acc)
+                    seq_list.append(seq)
+                    annot_list.append(annots)
+                prot = flds[1]
+                annots = []
+                seq = ''
+            elif (flds[0].lower() == 'ac') and (len(flds) > 1):
+                acc = [f.strip(';') for f in flds[1].split()]
+            elif (flds[0].lower() == 'dr') and (len(flds) > 1):
+                flds = flds[1].split('; ')
+                if flds[0].lower() == 'go':
+                    go_id = flds[1]
+                    go_code = flds[3].split(':')[0]
+                    annots.append((go_id, go_code))
+            elif flds[0].lower() == 'sq':
+                seq = next(f).strip().replace(' ', '')
+                while True:
+                    sq = next(f).strip().replace(' ', '')
+                    if sq == '//':
+                        break
+                    else:
+                        seq += sq
+        prot_list.append(prot)
+        acc_list.append(acc)
+        seq_list.append(seq)
+        annot_list.append(annots)
+    
+    # Create a pandas dataframe to store the SwissProt metadata
+    sprot_df = pd.DataFrame({'protein': prot_list, 'acc': acc_list, 'seq': seq_list, 'go': annot_list})
+    keep_exp_prots = []
+    keep_exp_annots = []
+    for idx, row in sprot_df.iterrows():
+        exp_annots = []
+        for go_id, go_code in row.go:
+            if go_code in exp_codes:
+                exp_annots.append(go_id)
+        if len(exp_annots) > 0:
+            keep_exp_prots.append(idx)
+            keep_exp_annots.append(';'.join(exp_annots))
+    sprot_exp_df = sprot_df.loc[keep_exp_prots]
+    sprot_exp_df.loc[:,'go_exp'] = keep_exp_annots
+    sprot_exp_df.to_csv('data/uniprot/sprot_db_current_metadata.tsv', sep='\t', index=True, header=True)
+
+    print("Writing the SwissProt database outputs")
+    rec_list = []
+    with open('data/uniprot/sprot_db_current_annot_exp.tsv', 'w') as f:
+        f.write('id' + '\t' + 'go_exp' + '\n')
+        for idx, row in sprot_exp_df.iterrows():
+            for acc in row.acc:
+                f.write(acc + '\t' + row.go_exp + '\n')
+                rec = SeqRecord(row.seq, id=acc, name='', description='')
+                rec_list.append(rec)
+    SeqIO.write(rec_list, 'data/uniprot/sprot_db_current.fasta', 'fasta')
