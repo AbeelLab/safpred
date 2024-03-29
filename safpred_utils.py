@@ -153,7 +153,7 @@ def find_nn_clusters(db_path, emb_path, keep_clusters, test_embeddings, norm_sim
     return nn_dict, new_db_df
 
 def assign_regions(db_path, emb_path, keep_clusters, test_embeddings, norm_sim=True, 
-                   keep_singletons=False, ths_et='synteny', nn_set='synteny'):
+                   keep_singletons=False, th_set='synteny', nn_set='synteny'):
     '''
     Assign query points to the most similar region in the database
     Input: database file path, cluster embeddings file path, list of clusters allowed, 
