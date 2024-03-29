@@ -55,5 +55,18 @@ def load_annot_file(annot_file_path):
         go_terms = np.array([str(i) for i in row.go_exp.split(';') if str(i) != obsolete_terms])
         # goterms = np.array([str(i) for i in row.go_exp.split(';')])
         annot_map[seq_id] = go_terms
+    
+def get_seq_id(fasta_file_path):
+    """
+    Get sequence IDs from a fasta file
+    Input: fasta file path
+    Returns a list sequence IDs
+    """
+    from Bio import SeqIO
 
-    return annot_map
+    seq_ids = []
+    for rec in SeqIO.parse(fasta_file_path, 'fasta'):
+        seq_id = rec.id
+        seq_ids.append(seq_id)
+
+    return seq_ids
