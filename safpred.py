@@ -87,7 +87,7 @@ def main():
     predictions = safpred_utils.predict_from_avg_synteny(cluster2go, db_df, nn_dict)
     norm_predictions = safpred_utils.normalize_predictions(predictions, go_classes)
 
-    print("Saving the normalized predictions to directory {}"/.format(output_path))
+    print("Saving the normalized predictions to directory {}".format(output_path))
     with open(predictions_path, 'wb') as f:
         f.write(norm_predictions)
 

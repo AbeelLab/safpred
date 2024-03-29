@@ -162,7 +162,7 @@ def SAFPrednn(annot_file_path, train_file_path, test_file_path, percentile=99.0)
             # Only consider neighbors with similarity over the threshold
             if similarity >= t:
                 # Fetch GO terms associated with train protein
-                train_prot_goterms = annotmap[train_id]
+                train_prot_goterms = annot_map[train_id]
 
                 # Iterate over the train protein go terms
                 for go_term in train_prot_goterms:
