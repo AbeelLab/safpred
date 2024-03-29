@@ -7,7 +7,7 @@ from copy import deepcopy
 import pandas as pd
 import pickle
 
-def parse_database_file(db_path, emb_path, keep_clusters, keep_singletons=False, avg_synteny=False):
+def parse_database_file(db_path, emb_path, keep_clusters=None, keep_singletons=False, avg_synteny=False):
     '''
     Parse the database file, noticed that I need this more often and I thought I would >.>
     Input: database file path, embeddings file path, list of clusters allowed, parameter to keep singleton regions 
@@ -29,7 +29,9 @@ def parse_database_file(db_path, emb_path, keep_clusters, keep_singletons=False,
     for i, (rnum, row) in enumerate(nr_db_df.iterrows()):
         for cnum in row.region: 
             synteny_clusters.add(cnum)
-    # Add the clusters that didn't make it into a region    
+    # Add the clusters that didn't make it into a region
+    if not keep_clusters:
+        keep_clusters = deepcopy(synteny_clusters)
     add_clusters = set(keep_clusters).difference(synteny_clusters) # add all other clusters 
     add_region = [{'region': tuple([cnum]), 'intergenic_dist': [0], 'region_len': 1} for cnum in add_clusters]
     add_region = pd.DataFrame(pd.DataFrame(add_region, index=range(len(add_region))))
