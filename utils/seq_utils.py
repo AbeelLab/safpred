@@ -75,6 +75,16 @@ def get_seq_id(fasta_file_path):
 
     return seq_ids
 
+def run_wget(cmd, verbose=False, *args, **kwargs):
+    import subprocess
+
+    process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                               text=True, shell=True)
+    std_out, std_err = process.communicate()
+    if verbose:
+        print(std_out.strip(), std_err)
+    pass
+
 def download_sprot(output_dir, release='current'):
     """
     Download a specific release of the SwissProt database, it will fetch both the protein sequences
@@ -93,16 +103,20 @@ def download_sprot(output_dir, release='current'):
     None.    
     """
     import gzip
-    import wget
+    import os
     import pandas as pd
     from Bio import SeqIO
     from Bio.SeqRecord import SeqRecord
+    from Bio.Seq import Seq
 
     if release == 'current':
         sprot_url = 'ftp://ftp.uniprot.org/pub/databases/uniprot/current_release/knowledgebase/complete/uniprot_sprot.dat.gz'
-        go_url = 'http://purl.obolibrary.org/obo/go.obo'       
-        wget.download(sprot_url, out='data/uniprot/uniprot_sprot.dat.gz')
-        wget.download(go_url, out='data/goa/go.obo')
+        go_url = 'http://purl.obolibrary.org/obo/go.obo'  
+        
+        cmd = 'wget -P {} {}'.format(os.path.join(output_dir, 'uniprot'), sprot_url)
+        run_wget(cmd)
+        cmd = 'wget -P {} {}'.format(os.path.join(output_dir, 'go'), go_url)
+        run_wget(cmd)
     else:
         print("This script doesn't work for any releases other than current yet --- TODO")
         return
@@ -114,7 +128,7 @@ def download_sprot(output_dir, release='current'):
     acc_list = []
     seq_list = []
     annot_list = []
-    with gzip.open('data/uniprot/uniprot_sprot.dat.gz', 'rt') as f:
+    with gzip.open(os.path.join(output_dir, 'uniprot/uniprot_sprot.dat.gz'), 'rt') as f:
         prot = ''
         acc = ''
         seq = ''
@@ -165,15 +179,16 @@ def download_sprot(output_dir, release='current'):
             keep_exp_annots.append(';'.join(exp_annots))
     sprot_exp_df = sprot_df.loc[keep_exp_prots]
     sprot_exp_df.loc[:,'go_exp'] = keep_exp_annots
-    sprot_exp_df.to_csv('data/uniprot/sprot_db_current_metadata.tsv', sep='\t', index=True, header=True)
+    sprot_exp_df.to_csv(os.path.join(output_dir, 'uniprot/sprot_db_current_metadata.tsv'), sep='\t', index=True, header=True)
 
     print("Writing the SwissProt database outputs")
     rec_list = []
-    with open('data/uniprot/sprot_db_current_annot_exp.tsv', 'w') as f:
+    with open(os.path.join(output_dir, 'uniprot/sprot_db_current_metadata.tsv'), 'w') as f:
         f.write('id' + '\t' + 'go_exp' + '\n')
         for idx, row in sprot_exp_df.iterrows():
             for acc in row.acc:
                 f.write(acc + '\t' + row.go_exp + '\n')
-                rec = SeqRecord(row.seq, id=acc, name='', description='')
+                rec = SeqRecord(Seq(row.seq), id=acc, name='', description='')
                 rec_list.append(rec)
-    SeqIO.write(rec_list, 'data/uniprot/sprot_db_current.fasta', 'fasta')
+    SeqIO.write(rec_list, os.path.join(output_dir, 'uniprot/sprot_db_current.fasta'), 'fasta')
+    
