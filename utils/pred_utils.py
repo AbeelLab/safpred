@@ -102,8 +102,63 @@ def normalize_predictions(predictions, go_classes):
         for go_term, go_prob in query_pred.items():
             category = go_classes[go_term]
             if (min_prob[category] < 2) and (abs(max_prob[category] - min_prob[category]) > 0.0000000001):
-                norm_predictions[go_term] = (go_prob - min_prob[category]) / (max_prob[category] - min_prob[category])
+                query_pred[go_term] = (go_prob - min_prob[category]) / (max_prob[category] - min_prob[category])
+    
     return norm_predictions
+
+def propagate_predictions(predictions, remove_root=False, go_path='data/go/go.obo', name_space=False):
+    """
+    Propagate GO predictions, retains the max confidence   
+    Parameters
+    ----------
+    predictions : dict
+        A dictionary of predictions, maps protein IDs to predicted GO terms and their probability
+    remove_root : bool
+        Parameter to remove the root term. Default is False
+    go_path : str
+        Path to the GO ontology obo file. Default is 'data/go/go.obo'      
+    name_space : str    
+        If you want to want to propagate within this namespace only. Default is False, i.e.
+        propagates for all namespaces
+
+    Returns
+    -------
+    predictions : dict
+        A dictionary of propagated predictions, maps protein IDs to predicted GO terms and their probability
+    """
+    from utils.misc_utils import Ontology
+    
+    # Remove obsolete terms
+    obsolete_terms = {'GO:0052312', 'GO:1902586', 'GO:2000775'}
+    # Remove the root term for evaluations
+    if remove_root:
+        root_terms = ['GO:0008150','GO:0005575','GO:0003674']
+    else:
+        root_terms = []
+    root_terms = obsolete_terms.union(root_terms)    
+                  
+    prop_predictions = dict()
+    go = Ontology(go_path, with_rels=True)
+    for test_prot, test_predictions in predictions.items():
+        new_predictions = deepcopy(test_predictions)
+        for go_term, go_prob in test_predictions.items():
+            anc_go_set = set([go_term])
+            anc_go_set |= go.get_ancestors(go_term)
+            if name_space: # propagate within the ontology of this NS
+                cur_ns = go.get_namespace(go_term)
+                new_go_set = set([anc_go for anc_go in anc_go_set if go.get_namespace(anc_go) == cur_ns])
+            else:
+                new_go_set = anc_go_set
+            if remove_root: # remove root terms
+                new_go_set.difference(root_terms)
+            for new_go in new_go_set:
+                if new_go in new_predictions.keys():
+                    new_predictions[new_go] = max(new_predictions[new_go], go_prob)
+                else:
+                    new_predictions[new_go] = go_prob
+        prop_predictions[test_prot] = new_predictions
+    
+    return prop_predictions 
 
 def load_embeddings(train_file_path, test_file_path, percentile=99.999):
     """
@@ -131,48 +186,3 @@ def create_train_matrix(train_embeddings):
 
     return emb_matrix/np.linalg.norm(emb_matrix, axis=1, keepdims=True), id2row  
 
-def SAFPrednn(annot_file_path, train_file_path, test_file_path, percentile=99.0):
-    from utils import seq_utils
-    
-    annot_map = seq_utils.load_annot_file(annot_file_path)
-    train_embeddings, test_embeddings = load_embeddings(train_file_path, test_file_path)
-
-    train_emb_matrix, id2row = create_train_matrix(train_embeddings)
-    
-    # Iterate over test set and make predictions
-    num_test = len(test_embeddings)
-    predictions = dict()
-
-    for i, (query_id, query_emb) in enumerate(test_embeddings.items()):
-        if i % 1e3 == 0:
-            print("Predicted {} out of {} -- {} to go".format(i, num_test, num_test - i))
-   
-        # To each test protein, associate a dictionary of GO terms and their associated probabilities
-        go_pred = dict()
-
-        # Determine similarities
-        dot_products = np.matmul(train_emb_matrix, query_emb)
-        similarities = dot_products / np.linalg.norm(query_emb)
-
-        t = np.percentile(similarities, percentile)
-
-        for train_id, train_emb in train_embeddings.items():
-            similarity = similarities[id2row[train_id]]
-
-            # Only consider neighbors with similarity over the threshold
-            if similarity >= t:
-                # Fetch GO terms associated with train protein
-                train_prot_goterms = annot_map[train_id]
-
-                # Iterate over the train protein go terms
-                for go_term in train_prot_goterms:
-                    if go_term in go_pred:
-                        # If this GO term has been predicted before, store the maximum similarity
-                        go_pred[go_term] = max(go_pred[go_term], similarity)
-                    else:
-                        go_pred[go_term] = similarity
-
-        # Make prediction for this test protein
-        predictions[query_id] = go_pred
-        
-    return predictions

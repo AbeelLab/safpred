@@ -45,6 +45,8 @@ def load_annot_file(annot_file_path):
     Input: tsv file path
     Returns a dictionary mapping protein sequence IDs to go terms
     """
+    import pandas as pd
+    import numpy as np
     # Obsolete go terms are removed
     obsolete_terms = {'GO:0052312', 'GO:1902586', 'GO:2000775'}
     annot_df = pd.read_csv(annot_file_path, sep="\t", na_filter=False)
@@ -55,6 +57,8 @@ def load_annot_file(annot_file_path):
         go_terms = np.array([str(i) for i in row.go_exp.split(';') if str(i) != obsolete_terms])
         # goterms = np.array([str(i) for i in row.go_exp.split(';')])
         annot_map[seq_id] = go_terms
+    
+    return annot_map
     
 def get_seq_id(fasta_file_path):
     """

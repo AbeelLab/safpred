@@ -1,3 +1,7 @@
+import pickle
+import numpy as np    
+from Bio import SeqIO
+
 def esm1b_embed(in_path, model_dir, output_path=None, max_len=1000):
     """ 
     Extract ESM-1b embeddings for input aminoacid sequences
@@ -16,10 +20,7 @@ def esm1b_embed(in_path, model_dir, output_path=None, max_len=1000):
     -------
     Embedding vectors
     """
-    import pickle
-    from Bio import SeqIO
     from bio_embeddings.embed import ESM1bEmbedder
-    
     print("Loading the ESM-1b model")
     # Load the ESM-1b model from model_dir so we avoid downloading the weights
     # from scratch each time
@@ -27,28 +28,27 @@ def esm1b_embed(in_path, model_dir, output_path=None, max_len=1000):
 
     enc_seqs = []
     seq_ids = []
-    num_seqs = len(seqs)
     
     print("Extracting embeddings")
     for i, rec in enumerate(SeqIO.parse(in_path, 'fasta')):
-    seq = str(rec.seq)
-    seq = seq.replace('*','') # remove any missing aminoacids
-    seq_id = rec.id
-        if i % 1e4 == 0:
-            print("Processed {:.2f}% of the input".format(i/num_seqs*100))
+        seq = str(rec.seq)
+        seq = seq.replace('*','') # remove any missing aminoacids
+        seq_id = rec.id
+        if i % 1e3 == 0:
+            print("Processed {} sequences so far".format(i + 1))
         if len(seq) <= max_len:
-            emb = esm1b.embed(seq)
+            enc_seq = esm1b.embed(seq)
         else:
             # ESM-1b input is limited to 1024 aa, so we need to break long 
             # protein sequences into smaller chunks
             chunks = [seq[i:i + max_len] for i in range(0, len(seq), max_len)]
-            emb = np.vstack([esm1b.embed(chunk) for chunk in chunks])
-            emb = esm1b.reduce_per_protein(emb)
-        enc_seq = esm1b.reduce_per_protein(emb)
+            enc_seq = np.vstack([esm1b.embed(chunk) for chunk in chunks])
+            enc_seq = esm1b.reduce_per_protein(enc_seq)
+        enc_seq = esm1b.reduce_per_protein(enc_seq)
         enc_seqs.append(enc_seq)
         seq_ids.append(seq_id)
 
-    enc_dict = {'seq_ids': seq_ids, 'seqs': seqs, 'enc_seqs': enc_seqs}
+    enc_dict = {'seq_ids': seq_ids, 'enc_seqs': enc_seqs}
     if output_path:
         with open(output_path, 'wb') as f:
             pickle.dump(enc_dict, f)
@@ -72,8 +72,6 @@ def t5xlu50_embed(in_path, model_dir, output_path=None):
     -------
     Embedding vectors
     """
-    import pickle
-    from Bio import SeqIO
     from bio_embeddings.embed import ProtTransT5XLU50Embedder
     
     print("Loading the ESM-1b model")
@@ -84,7 +82,6 @@ def t5xlu50_embed(in_path, model_dir, output_path=None):
 
     enc_seqs = []
     seq_ids = []
-    num_seqs = len(seqs)
     
     print("Extracting embeddings")
     for i, rec in enumerate(SeqIO.parse(in_path, 'fasta')):
@@ -92,12 +89,12 @@ def t5xlu50_embed(in_path, model_dir, output_path=None):
         seq = seq.replace('*','') # remove any missing aminoacids
         seq_id = rec.id
         if i % 1e4 == 0:
-            print("Processed {:.2f}% of the input".format(i/num_seqs*100))
-        emb = t5xlu50.reduce_per_protein(t5xlu50.embed(seq))
+            print("Processed {} sequences so far".format(i + 1))
+        enc_seq = t5xlu50.reduce_per_protein(t5xlu50.embed(seq))
         enc_seqs.append(enc_seq)
         seq_ids.append(seq_id)
 
-    enc_dict = {'seq_ids': seq_ids, 'seqs': seqs, 'enc_seqs': enc_seqs}
+    enc_dict = {'seq_ids': seq_ids, 'enc_seqs': enc_seqs}
     if output_path:
         with open(output_path, 'wb') as f:
             pickle.dump(enc_dict, f)

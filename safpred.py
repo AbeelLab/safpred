@@ -78,14 +78,17 @@ def main():
     # Load cluster to GO term mapping dictionary
     with open('data/safpreddb/cluster2go.pkl', 'rb') as f:
         cluster2go = pickle.load(f)
-    with open('data/goa/go_classes.pkl', 'rb') as f:
+    with open('data/go/go_classes.pkl', 'rb') as f:
         go_classes = pickle.load(f)
     
     nn_dict, db_df = safpred_utils.assign_regions(db_path, db_emb_path, test_embeddings=test_embeddings, 
                                                   keep_clusters=None, norm_sim=args.norm_sim, 
                                                   keep_singletons=args.keep_singletons, th_set='synteny', nn_set='synteny')
-    predictions = safpred_utils.predict_from_avg_synteny(cluster2go, db_df, nn_dict)
-    norm_predictions = safpred_utils.normalize_predictions(predictions, go_classes)
+    safprednn_predictions = safpred_utils.safprednn(annot_file_path, train_embeddings, test_embeddings)
+    safpredsynteny_predictions = safpred_utils.predict_from_avg_synteny(cluster2go, db_df, nn_dict)
+    predictions = safpred_utils.combine_predictors(test_proteins, safprednn_predictions, safpredsynteny_predictions)
+    prop_predictions = pred_utils.propagate_predictions(predictions, remove_root=True)    
+    norm_predictions = pred_utils.normalize_predictions(prop_predictions, go_classes)
 
     print("Saving the normalized predictions to directory {}".format(output_path))
     with open(predictions_path, 'wb') as f:

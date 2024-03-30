@@ -257,12 +257,10 @@ def predict_from_avg_synteny(cluster2go, db_df, nn_dict):
     
     return predictions
 
-def safprednn(annot_file_path, train_file_path, test_file_path, percentile=99.0):
+def safprednn(annot_file_path, train_embeddings, test_embeddings, percentile=99.0):
     from utils import seq_utils, pred_utils
     
     annot_map = seq_utils.load_annot_file(annot_file_path)
-    train_embeddings, test_embeddings = pred_utils.load_embeddings(train_file_path, test_file_path)
-
     train_emb_matrix, id2row = pred_utils.create_train_matrix(train_embeddings)
     
     # Iterate over test set and make predictions
@@ -302,3 +300,23 @@ def safprednn(annot_file_path, train_file_path, test_file_path, percentile=99.0)
         predictions[query_id] = go_pred
         
     return predictions
+
+def combine_predictors(test_proteins, safprednn_predictions, safpredsynteny_predictions, weights=[0.5, 0.5]):
+    """
+    Combine GO term predictions from SAFPred-nn and SAFPred-synteny
+    Input: a list of test protein IDs, dict of predictions (ID -> {GO term: prob})
+    from the two predictors
+    Returns the combined predctions from the two predictors
+    """
+    final_predictions = dict()
+    for query_id in test_proteins:
+        go_pred = dict()
+        for prediction, w in zip([safprednn_predictions, safpredsynteny_predictions], weights):
+            for go_term, go_prob in prediction[query_id].items():
+                if go_term in go_pred:
+                    go_pred[go_term] = go_pred[go_term] + go_prob * w
+                else:
+                    go_pred[go_term] = go_prob * w
+        final_predictions[query_id] = go_pred
+    
+    return final_predictions
