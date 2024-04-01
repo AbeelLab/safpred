@@ -34,7 +34,7 @@ def esm1b_embed(in_path, model_dir, output_path=None, max_len=1000):
         seq = str(rec.seq)
         seq = seq.replace('*','') # remove any missing aminoacids
         seq_id = rec.id
-        if i % 1e3 == 0:
+        if i % 1e2 == 0:
             print("Processed {} sequences so far".format(i + 1))
         if len(seq) <= max_len:
             enc_seq = esm1b.embed(seq)
@@ -88,7 +88,7 @@ def t5xlu50_embed(in_path, model_dir, output_path=None):
         seq = str(rec.seq)
         seq = seq.replace('*','') # remove any missing aminoacids
         seq_id = rec.id
-        if i % 1e4 == 0:
+        if i % 1e2 == 0:
             print("Processed {} sequences so far".format(i + 1))
         enc_seq = t5xlu50.reduce_per_protein(t5xlu50.embed(seq))
         enc_seqs.append(enc_seq)

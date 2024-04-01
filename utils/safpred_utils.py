@@ -139,7 +139,7 @@ def find_nn_clusters(db_path, emb_path, keep_clusters, test_embeddings, norm_sim
     num_test = len(test_embeddings)
     nn_dict = {query_id: [] for query_id in test_embeddings.keys()}
     for i, (query_id, query_emb) in enumerate(test_embeddings.items()):
-        if i % 5*1e3 == 0: 
+        if i % 1e2 == 0: 
             print("Finished {:.2f}% of the test proteins".format(i/num_test*100))
         dot_products = np.matmul(cluster_emb_matrix, query_emb)
         similarities = dot_products / np.linalg.norm(query_emb)  
@@ -202,7 +202,7 @@ def assign_regions(db_path, emb_path, keep_clusters, test_embeddings, norm_sim=T
     num_test = len(test_embeddings)
     nn_dict = {query_id: [] for query_id in test_embeddings.keys()}
     for i, (query_id, query_emb) in enumerate(test_embeddings.items()):
-        if i % 5*1e3 == 0: 
+        if i % 1e2 == 0: 
             print("Finished {:.2f}% of the test proteins".format(i/num_test*100))
         dot_products = np.matmul(emb_matrix, query_emb)
         similarities = dot_products / np.linalg.norm(query_emb)  
@@ -232,7 +232,7 @@ def predict_from_avg_synteny(cluster2go, db_df, nn_dict):
 
     predictions = dict()
     for i, (query_id, nn) in enumerate(nn_dict.items()):
-        if i % 1e3 == 0:
+        if i % 1e2 == 0:
             print("Predicted {:.2f}% of the test set".format(i/num_test*100))
         go_pred = dict()
         region2gofreq = dict()
@@ -268,7 +268,7 @@ def safprednn(annot_file_path, train_embeddings, test_embeddings, percentile=99.
     predictions = dict()
 
     for i, (query_id, query_emb) in enumerate(test_embeddings.items()):
-        if i % 1e3 == 0:
+        if i % 1e2 == 0:
             print("Predicted {} out of {} -- {} to go".format(i, num_test, num_test - i))
    
         # To each test protein, associate a dictionary of GO terms and their associated probabilities

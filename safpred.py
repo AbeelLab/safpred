@@ -18,12 +18,14 @@ def main():
     parser.add_argument('--test_seq', '-t', type=str, required=True, 
                         help = 'Path to the test set sequences file in fasta format')   
     parser.add_argument('--annot_file', '-a', type=str, required=True, 
-                        help = 'Path to the annotation file, mapping all proteins (train and test) to GO terms')    
-    parser.add_argument('--db_path', '-d', type=str, required=True, 
+                        help = 'Path to the annotation file, mapping all proteins (train and test) to GO terms')
+    parser.add_argument('--output', '-o', type=str, required=True, 
+                        help='Output directory where the prediction results will be stored')    
+    parser.add_argument('--db_path', '-d', type=str, default='data/safpreddb/safpreddb.pkl.gz', 
                         help = 'Path to the synteny database file')
-    parser.add_argument('--db_emb_path', '-b', type=str, required=True, 
+    parser.add_argument('--db_emb_path', '-b', type=str, default='data/safpreddb/safpreddb_emb.pkl', 
                         help = 'Path to the synteny database embeddings file')
-    parser.add_argument('--emb_model', '-e', type=str, required=True, 
+    parser.add_argument('--emb_model', '-e', type=str, default='esm', 
                         help = 'Embedding model: "esm", "t5" or "none". which requires train and test embedding files as input')
     parser.add_argument('--train_emb_file', '-f', type=str, default=None, 
                         help = 'Path to the training embeddings, required only if you want to use your own')
@@ -31,16 +33,12 @@ def main():
                         help = 'Path to the test embeddings, required only if you want to use your own')
     parser.add_argument('--nn_percentile', '-p', type=float, default=99.999, 
                         help = 'Percentile for the NN thresholds. Default is 99.999')
-    parser.add_argument('--norm_sim', '-n', type=bool, default=True, 
+    parser.add_argument('--norm_sim', '-n', action='store_true', 
                         help = 'Normalize NN similarities. Default is True')
-    parser.add_argument('--keep_singletons', '-k', type=bool, default=True, 
+    parser.add_argument('--keep_singletons', '-k', action='store_true', 
                         help = 'Keep singleton entries in the synteny database. Default is True')    
-    parser.add_argument('--output', '-o', type=str, required=True, 
-                        help='Output directory where the prediction results will be stored')
 
     args = parser.parse_args()
-    args.out = args.out[0]
-    print(args.out)
     train_seq_file = args.train_seq
     test_seq_file = args.test_seq
     annot_file_path = args.annot_file
@@ -92,7 +90,7 @@ def main():
 
     print("Saving the normalized predictions to directory {}".format(output_path))
     with open(predictions_path, 'wb') as f:
-        f.write(norm_predictions)
+        pickle.dump(norm_predictions, f)
 
 if __name__ == '__main__':
     main()
