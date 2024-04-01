@@ -35,7 +35,7 @@ def esm1b_embed(in_path, model_dir, output_path=None, max_len=1000):
         seq = seq.replace('*','') # remove any missing aminoacids
         seq_id = rec.id
         if i % 1e2 == 0:
-            print("Processed {} sequences so far".format(i + 1))
+            print("Processed {} sequence(s) so far".format(i + 1))
         if len(seq) <= max_len:
             enc_seq = esm1b.embed(seq)
         else:
@@ -48,7 +48,7 @@ def esm1b_embed(in_path, model_dir, output_path=None, max_len=1000):
         enc_seqs.append(enc_seq)
         seq_ids.append(seq_id)
 
-    enc_dict = {'seq_ids': seq_ids, 'enc_seqs': enc_seqs}
+    enc_dict = {seq_id: enc_seq for (seq_id, enc_seq) in zip(seq_ids, enc_seqs)}
     if output_path:
         with open(output_path, 'wb') as f:
             pickle.dump(enc_dict, f)
@@ -74,7 +74,7 @@ def t5xlu50_embed(in_path, model_dir, output_path=None):
     """
     from bio_embeddings.embed import ProtTransT5XLU50Embedder
     
-    print("Loading the ESM-1b model")
+    print("Loading the T5-XL-U50 model")
     # Load the T5-XL-U50 model from model_dir so we avoid downloading the weights
     # from scratch each time
     t5xlu50 = ProtTransT5XLU50Embedder(model_directory=model_dir, 
@@ -89,12 +89,12 @@ def t5xlu50_embed(in_path, model_dir, output_path=None):
         seq = seq.replace('*','') # remove any missing aminoacids
         seq_id = rec.id
         if i % 1e2 == 0:
-            print("Processed {} sequences so far".format(i + 1))
+            print("Processed {} sequence(s) so far".format(i + 1))
         enc_seq = t5xlu50.reduce_per_protein(t5xlu50.embed(seq))
         enc_seqs.append(enc_seq)
         seq_ids.append(seq_id)
 
-    enc_dict = {'seq_ids': seq_ids, 'enc_seqs': enc_seqs}
+    enc_dict = {seq_id: enc_seq for (seq_id, enc_seq) in zip(seq_ids, enc_seqs)}
     if output_path:
         with open(output_path, 'wb') as f:
             pickle.dump(enc_dict, f)

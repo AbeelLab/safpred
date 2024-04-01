@@ -1,4 +1,5 @@
 data/go/go.obo
 data/safpreddb/safpreddb*
+data/safpreddb/gtdb*
 data/models
 out
