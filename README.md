@@ -14,8 +14,6 @@ In this repository the scripts we used to run and evaluate SAFPred.
 
 - bio_embeddings
 
-
-
 You can create a new conda environment and install all dependencies with the environment file in this repository.
 
 ```bash
@@ -77,9 +75,9 @@ data
 
 The synteny database, SAFPredDB, is based on the entire Genome Taxonomy Database (GTDB Release 202, retrieved on 31/03/2022). You can find the current release, as well as the previous versions of GTDB [here](https://gtdb.ecogenomic.org/). Our synteny database will be uploaded to the TU Delft repositories soon. 
 
-- You can download the full SAFPredDB [here](https://surfdrive.surf.nl/files/index.php/s/ZKJARu9KmSfnxpL) and the corresponding embeddings [here]. You can find the accompanying scripts to load and edit an existing database, but also create your own in the SAFPredDB Github repository [here](https://github.com/AbeelLab/SAFPredDB)).
+- You can download the full SAFPredDB [here](https://surfdrive.surf.nl/files/index.php/s/KrWoxvEYdP38Xid) and the corresponding embeddings [here]. You can find the accompanying scripts to load and edit an existing database, but also create your own in the SAFPredDB Github repository [here](https://github.com/AbeelLab/SAFPredDB)).
 
-- To test our code, we provide a small portion of the full database in `data/safpreddb/safpreddb.pkl`, and you can download the corresponding embeddings to this small database [here](ffffff) 
+- To test our code, we provide a small portion of the full database which you can download along with the corresponding embeddings from [here](https://surfdrive.surf.nl/files/index.php/s/vNizLfgLL4gqUeZ) 
 
 ### Train and test sequences
 

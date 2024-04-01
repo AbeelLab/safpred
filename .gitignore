@@ -1,2 +1,3 @@
-data/safpreddb_emb.pkl
 data/go/go.obo
+data/safpreddb/safpreddb*
+out
