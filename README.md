@@ -4,9 +4,29 @@ SAFPred is a novel synteny-aware gene function prediction tool based on protein 
 
 In this repository the scripts we used to run and evaluate SAFPred.
 
-# Dependencies
+# Table of Contents
 
-- numpy
+- [Dependencies](#dependencies)
+
+- [Running SAFPred](#safpred)
+  
+  - [Usage](#usage)
+  
+  - [Miscellaneous scripts](#misc-scripts)
+
+- [Data](#data)
+  
+  - [SwissProt database and GO ontology](#sprot-go)
+  
+  - [SAFPredDB](#safpreddb)
+  
+  - [Train and test sequences](#train-test)
+  
+  - [Protein language models](#plm)
+
+- [Citation](#citation)
+
+# Dependencies <a name="dependencies"></a>
 
 - pandas
 
@@ -14,15 +34,17 @@ In this repository the scripts we used to run and evaluate SAFPred.
 
 - bio_embeddings
 
+- tqdm
+
 You can create a new conda environment and install all dependencies with the environment file in this repository.
 
 ```bash
 conda env create -f environment.yml
 ```
 
-# Data
+# Data <a name="data"></a>
 
-### SwissProt database and GO ontology
+### SwissProt database and GO ontology <a name="sprot-go"></a>
 
 - The latest release of GO ontology can be downloaded from [the Gene Ontology website](http://geneontology.org/).
   - To reproduce our results, use release 2021-11-16 from the GO archives.
@@ -33,7 +55,7 @@ conda env create -f environment.yml
     2. Proteins with at least one experimental GO annotation are retained (evidence codes: EXP, IDA, IPI, IMP, IGI, IEP, HTP, HDA, HMP, HGI, HEP, IBA, IBD, IKR, IRD, IC, TAS).
 
 ```bash
-./download_sprot_wrapper.py -h
+./scripts/download_sprot_wrapper.py -h
 
 usage: download_sprot_wrapper.py [-h] --output_dir OUTPUT_DIR --release RELEASE
 
@@ -71,7 +93,7 @@ data
 1. `sprot_db_current_metadata.tsv` is a tab-separated file, mapping uniprot entries to experimental GO annotations
 2. `sprot_db_current.fasta` is a fasta file that contains the corresponding proteins sequences for the proteins in `sprot_db_current_metadata.tsv`.
 
-### SAFPredDB
+### SAFPredDB <a name="safpreddb"></a>
 
 The synteny database, SAFPredDB, is based on the entire Genome Taxonomy Database (GTDB Release 202, retrieved on 31/03/2022). You can find the current release, as well as the previous versions of GTDB [here](https://gtdb.ecogenomic.org/). Our synteny database will be uploaded to the TU Delft repositories soon. 
 
@@ -79,7 +101,7 @@ The synteny database, SAFPredDB, is based on the entire Genome Taxonomy Database
 
 - To test our code, we provide a small portion of the full database which you can download along with the corresponding embeddings from [here](https://surfdrive.surf.nl/files/index.php/s/vNizLfgLL4gqUeZ) 
 
-### Train and test sequences
+### Train and test sequences <a name="train-test"></a>
 
 To test our code, we created a small subset of our full *E. coli* experiment. In this repository, you can find both the fasta sequences and the embeddings:
 
@@ -91,7 +113,21 @@ data/input
 └── train_seq_ecoli_small.fasta
 ```
 
-# Running SAFPred
+### Protein Language Models <a name="plm"></a>
+
+If you want to extract protein embeddings using the language models we used in our work (instead of providing your own embeddings) you need to download the model weights and files from their own repositories, [Evolutionary Scale Modeling (esm): Pretrained language models for proteins](https://github.com/facebookresearch/esm)) and [T5-XL-U50: Get protein embeddings from protein sequences](https://github.com/sacdallago/bio_embeddings). 
+
+Once you have the model data, make sure you place them under the `models` directory
+
+```bash
+data
+├── models
+│   ├── esm1b
+│   ├── t5
+
+```
+
+# Running SAFPred <a name="safpred"></a>
 
 To run SAFPred successfully, a few annotation and database files are needed, and you should preserve the directory structure as we provide in this repository:
 
@@ -105,7 +141,7 @@ data
 │   ├── cluster2go.pkl
 ```
 
-#### Usage
+### Usage <a name="usage"></a>
 
 ```bash
 ./safpred.py -h
@@ -145,8 +181,38 @@ optional arguments:
                         Keep singleton entries in the synteny database. Default is True
 ```
 
-The following example run will make predictions for 50 E. coli proteins and write the final prediction output into the directory `out`:
+The following example run will make predictions for 50 *E. coli* proteins, using embedding vectors we already created before, and write the final prediction output into the directory `out`:
 
 ```bash
 ./safpred.py -i data/input/train_seq_ecoli_small.fasta -t data/input/test_seq_ecoli_small.fasta -o out -a data/uniprot/sprot_db_current_metadata.tsv -d data/safpreddb/safpreddb.pkl.gz -b data/safpreddb/safpreddb_emb.pkl -e none -f data/input/train_embeddings_ecoli_small.pkl -g data/input/test_embeddings_ecoli_small.pkl 
+```
+
+### Miscellaneous scripts <a name="misc-scripts"></a>
+
+Under the directory `scripts` you will find miscellaneous scripts we used when running the experiments for our manuscript. 
+
+- `download_sprot_wrapper.py`: python wrapper to download the current release of the SwissProt database and GO ontology, and prepare the databases to run SAFPred.
+
+- `evaluate_predictions.py`_: python wrapper to evaluate SAFPred prediction outputs
+
+- `run_blast_baseline.py`: python wrapper to (i) create a blast db from the training set sequences, (ii) predict using the [frequency blast](https://doi.org/10.1186/s13059-019-1835-8) approach and (iii) propagate and normalize predictions.
+
+
+
+# Citation <a name="citation"></a>
+
+If you find our method or any of the original script in this repository useful, please cite
+
+```python
+@article {urhan2023safpred,
+	author = {Aysun Urhan and Bianca-Maria Cosma and Ashlee M. Earl and Abigail L. Manson and Thomas Abeel},
+	title = {SAP: Synteny-aware gene function prediction for bacteria using protein embeddings},
+	elocation-id = {2023.05.02.539034},
+	year = {2023},
+	doi = {10.1101/2023.05.02.539034},
+	publisher = {Cold Spring Harbor Laboratory},
+	URL = {https://www.biorxiv.org/content/early/2023/11/21/2023.05.02.539034},
+	eprint = {https://www.biorxiv.org/content/early/2023/11/21/2023.05.02.539034.full.pdf},
+	journal = {bioRxiv}
+}
 ```

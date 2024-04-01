@@ -191,4 +191,51 @@ def download_sprot(output_dir, release='current'):
                 rec = SeqRecord(Seq(row.seq), id=acc, name='', description='')
                 rec_list.append(rec)
     SeqIO.write(rec_list, os.path.join(output_dir, 'uniprot/sprot_db_current.fasta'), 'fasta')
+
+def blast_wrapper(test_seq_file, blast_db, e_value=0.001, word_size=11, 
+                  out_fmt=['6', 'qaccver', 'saccver', 'qstart','qend', 'pident',
+                           'length','bitscore','qcovs', 'evalue']):
+    """    
+    Python wrapper script to run blast against any database
+    
+    Parameters
+    ----------
+    test_seq_file : str
+        Path to test sequences in fasta format
+    blast_db : str
+        Path to the blast database, created from the training set sequences
+    e_value : float, optional
+        E-value cutoff for the blast hits. The default is 0.001.
+    word_size : int, optional
+        Word size parameter in blastp. The default is 11.
+    out_fmt : str, optional
+        The output format in tabular form and the columns we want in the blast output. 
+        The default is ['6', 'qaccver', 'saccver', 'qstart','qend', 'pident', 'length', 
+                        'bitscore','qcovs', 'evalue'].
+
+    Returns
+    -------
+    df : pandas.DataFrame
+        Blast hits stored in a neat pandas dataframe, if the blast ran successfully
+    """
+    import subprocess, re
+    import pandas as pd
+
+    out_fmt = ' '.join(out_fmt)
+    cmd = ('blastp', '-task', 'blastp-short', '-db', blast_db, '-query', test_seq_file, 
+           '-outfmt', out_fmt, '-evalue', str(e_value), '-word_size', str(word_size))
+    output = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, \
+                            universal_newlines=True)
+    if output.returncode == 0:
+        col_names = re.sub('\d', '', out_fmt).strip().split(' ')
+        result = [x.split('\t') for x in output.stdout.split('\n') if x]
+        df = pd.DataFrame(result, columns=col_names)
+        float_cols = {'pident', 'bitscore', 'qcovs', 'evalue'}.intersection(col_names)
+        int_cols = {'length', 'qstart', 'qend'}.intersection(col_names)
+        df.loc[:, float_cols] = df[float_cols].applymap(float)
+        df.loc[:, int_cols] = df[int_cols].applymap(int)
+        return df
+    else:
+        print("Ooops something went wrong")
+        return 
     
