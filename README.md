@@ -7,23 +7,14 @@ In this repository the scripts we used to run and evaluate SAFPred.
 # Table of Contents
 
 - [Dependencies](#dependencies)
-
 - [Running SAFPred](#safpred)
-  
   - [Usage](#usage)
-  
   - [Miscellaneous scripts](#misc-scripts)
-
 - [Data](#data)
-  
   - [SwissProt database and GO ontology](#sprot-go)
-  
   - [SAFPredDB](#safpreddb)
-  
   - [Train and test sequences](#train-test)
-  
   - [Protein language models](#plm)
-
 - [Citation](#citation)
 
 # Dependencies <a name="dependencies"></a>
@@ -123,8 +114,7 @@ Once you have the model data, make sure you place them under the `models` direct
 data
 ├── models
 │   ├── esm1b
-│   ├── t5
-
+│   └── t5
 ```
 
 # Running SAFPred <a name="safpred"></a>
@@ -184,7 +174,10 @@ optional arguments:
 The following example run will make predictions for 50 *E. coli* proteins, using embedding vectors we already created before, and write the final prediction output into the directory `out`:
 
 ```bash
-./safpred.py -i data/input/train_seq_ecoli_small.fasta -t data/input/test_seq_ecoli_small.fasta -o out -a data/uniprot/sprot_db_current_metadata.tsv -d data/safpreddb/safpreddb.pkl.gz -b data/safpreddb/safpreddb_emb.pkl -e none -f data/input/train_embeddings_ecoli_small.pkl -g data/input/test_embeddings_ecoli_small.pkl 
+./safpred.py -i data/input/train_seq_ecoli_small.fasta -t data/input/test_seq_ecoli_small.fasta \
+    -o out -a data/uniprot/sprot_db_current_metadata.tsv -d data/safpreddb/safpreddb.pkl.gz \
+    -b data/safpreddb/safpreddb_emb.pkl -e none -f data/input/train_embeddings_ecoli_small.pkl \
+    -g data/input/test_embeddings_ecoli_small.pkl 
 ```
 
 ### Miscellaneous scripts <a name="misc-scripts"></a>
@@ -197,22 +190,20 @@ Under the directory `scripts` you will find miscellaneous scripts we used when r
 
 - `run_blast_baseline.py`: python wrapper to (i) create a blast db from the training set sequences, (ii) predict using the [frequency blast](https://doi.org/10.1186/s13059-019-1835-8) approach and (iii) propagate and normalize predictions.
 
-
-
 # Citation <a name="citation"></a>
 
 If you find our method or any of the original script in this repository useful, please cite
 
 ```python
 @article {urhan2023safpred,
-	author = {Aysun Urhan and Bianca-Maria Cosma and Ashlee M. Earl and Abigail L. Manson and Thomas Abeel},
-	title = {SAP: Synteny-aware gene function prediction for bacteria using protein embeddings},
-	elocation-id = {2023.05.02.539034},
-	year = {2023},
-	doi = {10.1101/2023.05.02.539034},
-	publisher = {Cold Spring Harbor Laboratory},
-	URL = {https://www.biorxiv.org/content/early/2023/11/21/2023.05.02.539034},
-	eprint = {https://www.biorxiv.org/content/early/2023/11/21/2023.05.02.539034.full.pdf},
-	journal = {bioRxiv}
+    author = {Aysun Urhan and Bianca-Maria Cosma and Ashlee M. Earl and Abigail L. Manson and Thomas Abeel},
+    title = {SAP: Synteny-aware gene function prediction for bacteria using protein embeddings},
+    elocation-id = {2023.05.02.539034},
+    year = {2023},
+    doi = {10.1101/2023.05.02.539034},
+    publisher = {Cold Spring Harbor Laboratory},
+    URL = {https://www.biorxiv.org/content/early/2023/11/21/2023.05.02.539034},
+    eprint = {https://www.biorxiv.org/content/early/2023/11/21/2023.05.02.539034.full.pdf},
+    journal = {bioRxiv}
 }
 ```
