@@ -88,7 +88,7 @@ data
 
 The synteny database, SAFPredDB, is based on the entire Genome Taxonomy Database (GTDB Release 202, retrieved on 31/03/2022). You can find the current release, as well as the previous versions of GTDB [here](https://gtdb.ecogenomic.org/). Our synteny database will be uploaded to the TU Delft repositories soon. 
 
-- You can download the full SAFPredDB [here](https://surfdrive.surf.nl/files/index.php/s/KrWoxvEYdP38Xid) and the corresponding embeddings [here]. You can find the accompanying scripts to load and edit an existing database, but also create your own in the SAFPredDB Github repository [here](https://github.com/AbeelLab/SAFPredDB)). On the 4TU.Research Database you will find 3 files:
+- You can download the full SAFPredDB and the corresponding embeddings [from 4TU.ResearchData](https://doi.org/10.4121/ac84802e-853f-46f1-9786-b9d29c0f7557.v1). You can find the accompanying scripts to load and edit an existing database, but also create your own in the SAFPredDB Github repository [here](https://github.com/AbeelLab/SAFPredDB)). On the 4TU.ResearchData you will find 3 files:
   
   - `safpreddb_full_nr.pkl.tar.gz`
     
@@ -101,7 +101,7 @@ The synteny database, SAFPredDB, is based on the entire Genome Taxonomy Database
     - `region_len`: number of clusters in a region
   
   - `safpreddb_full_emb.pkl`
-      A dict mapping each region to the average synteny vector, which was calculated by taking the average of embedding vectors (extracted using the ESM-1b model) of each cluster in the region
+      A dictionary mapping each region to the average synteny vector, which was calculated by taking the average of embedding vectors (extracted using the ESM-1b model) of each cluster in the region
   
   - `safpreddb_cluster_dict.pkl`
     
@@ -209,7 +209,7 @@ Under the directory `scripts` you will find miscellaneous scripts we used when r
 
 # Citation <a name="citation"></a>
 
-If you find our method or any of the original script in this repository useful, please cite
+If you find our method or any of the original script in this repository useful, please cite the manuscript:
 
 ```python
 @article {urhan2023safpred,
@@ -222,5 +222,21 @@ If you find our method or any of the original script in this repository useful, 
     URL = {https://www.biorxiv.org/content/early/2023/11/21/2023.05.02.539034},
     eprint = {https://www.biorxiv.org/content/early/2023/11/21/2023.05.02.539034.full.pdf},
     journal = {bioRxiv}
+}
+```
+
+If you use the full SAFPredDB database from the [4TU.ResearchData](https://doi.org/10.4121/ac84802e-853f-46f1-9786-b9d29c0f7557.v1) please cite 
+
+```python
+@misc{urhan2024safpreddb,
+  doi = {10.4121/AC84802E-853F-46F1-9786-B9D29C0F7557.V1},
+  url = {https://data.4tu.nl/datasets/ac84802e-853f-46f1-9786-b9d29c0f7557/1},
+  author = {Urhan, Aysun and Cosma, Bianca-Maria and Earl, Ashlee M. and Manson, Abigail L. and Abeel, Thomas},
+  keywords = {Microbiology, FOS: Biological sciences, Genetics, Biological Sciences, bionformatics, microbial genomics, genomics, protein language model, bacterial genomics, comparative genomics, protein embeddings, sequence analysis, bacterial synteny},
+  language = {en},
+  title = {SAFPredDB: Bacterial synteny database},
+  publisher = {4TU.ResearchData},
+  year = {2024},
+  copyright = {Creative Commons Attribution Non Commercial 4.0 International}
 }
 ```
