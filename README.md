@@ -88,9 +88,26 @@ data
 
 The synteny database, SAFPredDB, is based on the entire Genome Taxonomy Database (GTDB Release 202, retrieved on 31/03/2022). You can find the current release, as well as the previous versions of GTDB [here](https://gtdb.ecogenomic.org/). Our synteny database will be uploaded to the TU Delft repositories soon. 
 
-- You can download the full SAFPredDB [here](https://surfdrive.surf.nl/files/index.php/s/KrWoxvEYdP38Xid) and the corresponding embeddings [here]. You can find the accompanying scripts to load and edit an existing database, but also create your own in the SAFPredDB Github repository [here](https://github.com/AbeelLab/SAFPredDB)).
+- You can download the full SAFPredDB [here](https://surfdrive.surf.nl/files/index.php/s/KrWoxvEYdP38Xid) and the corresponding embeddings [here]. You can find the accompanying scripts to load and edit an existing database, but also create your own in the SAFPredDB Github repository [here](https://github.com/AbeelLab/SAFPredDB)). On the 4TU.Research Database you will find 3 files:
+  
+  - `safpreddb_full_nr.pkl.tar.gz`
+    
+    The database itself, stored as a pickled pandas DataFrame. The syntenic regions are numbered (zero-based index), each one has the columns:
+    
+    - `region`: the gene clusters within the syntenic region, you can find which genes were clustered in which cluster IDs in the `safpreddb_cluster_dict.pkl` file
+    
+    - `intergenic_dist`: intergenic distance between the clusters in a syntenic region. Since there are multiple genes in each cluster, and thus multiple intergenic distance values between any two cluster in a region, we report the minimum of these values
+    
+    - `region_len`: number of clusters in a region
+  
+  - `safpreddb_full_emb.pkl`
+      A dict mapping each region to the average synteny vector, which was calculated by taking the average of embedding vectors (extracted using the ESM-1b model) of each cluster in the region
+  
+  - `safpreddb_cluster_dict.pkl`
+    
+    A dictionary mapping each cluster to the genes it caontains, and the genomes these genes are located on as `{cluster_id: {'genes': genes, 'genomes': genomes}}`
 
-- To test our code, we provide a small portion of the full database which you can download along with the corresponding embeddings from [here](https://surfdrive.surf.nl/files/index.php/s/vNizLfgLL4gqUeZ) 
+- To test our code, we provide a small portion of the full database which you can download along with the corresponding embeddings from [here](https://surfdrive.surf.nl/files/index.php/s/vNizLfgLL4gqUeZ).
 
 ### Train and test sequences <a name="train-test"></a>
 
