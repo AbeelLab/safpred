@@ -212,16 +212,16 @@ Under the directory `scripts` you will find miscellaneous scripts we used when r
 If you find our method or any of the original script in this repository useful, please cite the manuscript:
 
 ```python
-@article {urhan2023safpred,
+@article {urhan2024safpred,
     author = {Aysun Urhan and Bianca-Maria Cosma and Ashlee M. Earl and Abigail L. Manson and Thomas Abeel},
-    title = {SAP: Synteny-aware gene function prediction for bacteria using protein embeddings},
-    elocation-id = {2023.05.02.539034},
-    year = {2023},
-    doi = {10.1101/2023.05.02.539034},
-    publisher = {Cold Spring Harbor Laboratory},
-    URL = {https://www.biorxiv.org/content/early/2023/11/21/2023.05.02.539034},
-    eprint = {https://www.biorxiv.org/content/early/2023/11/21/2023.05.02.539034.full.pdf},
-    journal = {bioRxiv}
+    title = {SAFPred: Synteny-aware gene function prediction for bacteria using protein embeddings},
+    year = {2024},
+    volume = {40},
+    number = {6},
+    pages = {btae328},
+    month = {05},
+    doi = {10.1093/bioinformatics/btae328},
+    journal = {Bioinformatics}
 }
 ```
 
@@ -229,8 +229,8 @@ If you use the full SAFPredDB database from the [4TU.ResearchData](https://doi.o
 
 ```python
 @misc{urhan2024safpreddb,
-  doi = {10.4121/AC84802E-853F-46F1-9786-B9D29C0F7557.V1},
-  url = {https://data.4tu.nl/datasets/ac84802e-853f-46f1-9786-b9d29c0f7557/1},
+  doi = {10.4121/AC84802E-853F-46F1-9786-B9D29C0F7557},
+  url = {https://data.4tu.nl/datasets/ac84802e-853f-46f1-9786-b9d29c0f7557},
   author = {Urhan, Aysun and Cosma, Bianca-Maria and Earl, Ashlee M. and Manson, Abigail L. and Abeel, Thomas},
   keywords = {Microbiology, FOS: Biological sciences, Genetics, Biological Sciences, bionformatics, microbial genomics, genomics, protein language model, bacterial genomics, comparative genomics, protein embeddings, sequence analysis, bacterial synteny},
   language = {en},
