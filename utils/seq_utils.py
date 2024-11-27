@@ -239,3 +239,38 @@ def blast_wrapper(test_seq_file, blast_db, e_value=0.001, word_size=11,
         print("Ooops something went wrong")
         return 
     
+def remove_train_proteins(train_seq_file, test_seq_file, max_pident=40, 
+                          blast_output_file=None):
+    """    
+    Remove the proteins in the training set that exceed the maximum sequence
+    similarity allowed between the train and test set proteins
+    
+    Parameters
+    ----------
+    train_seq_file : str
+        Path to train dataset sequences in fasta format.
+    test_seq_file : str
+        Path to test dataset sequences in fasta format.        
+    max_pident : float, optional
+        Maximum sequence similarity allowed between the train and test proteins.
+        The default is 40.
+    blast_output_file : str, optional
+        Path to the blast output, created from running all vs all blast alignment.
+        The default setting is to run blast from scratch.
+
+    Returns
+    -------
+    train_proteins : list
+        Proteins that allowed in the training set
+    """
+    
+    train_proteins = get_seq_id(train_seq_file)
+
+    if not blast_output_file: # we need to run blast from scratch
+        blast_df = blast_wrapper(test_seq_file, train_seq_file)        
+
+    remove_proteins = blast_df[blast_df.pident > max_pident]['targetid']
+    keep_proteins = list(set(train_proteins).difference(remove_proteins))
+    
+    return keep_proteins
+    
