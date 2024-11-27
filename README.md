@@ -116,8 +116,10 @@ To test our code, we created a small subset of our full *E. coli* experiment. In
 ```bash
 data/input
 ├── test_embeddings_ecoli_small.pkl
+├── test_proteins_ecoli_small.txt
 ├── test_seq_ecoli_small.fasta
 ├── train_embeddings_ecoli_small.pkl
+├── train_proteins_ecoli_small.txt
 └── train_seq_ecoli_small.fasta
 ```
 
@@ -145,8 +147,11 @@ data
 │   ├── go_ics.pkl
 │   └── go.obo
 ├── safpreddb
+│   ├── cluster2go_full.pkl
 │   ├── cluster2go.pkl
 ```
+
+Note that the `cluster2go.pkl` file is a subset of the full mapping in `cluster2go_full.pkl`, it was created to accompany the toy example in this repository. If you want to use the full SAFPredDB database from 4TU.ResearchData, you need the full mapping, `cluster2go_full.pkl`. 
 
 ### Usage <a name="usage"></a>
 
