@@ -84,6 +84,13 @@ data
 1. `sprot_db_current_metadata.tsv` is a tab-separated file, mapping uniprot entries to experimental GO annotations
 2. `sprot_db_current.fasta` is a fasta file that contains the corresponding proteins sequences for the proteins in `sprot_db_current_metadata.tsv`.
 
+To reduce the redundancy in the uniprot database, we used CDHIT at 95% sequence similarity as follows:
+
+```bash
+cd-hit -i data/uniprot/sprot_db_current.fasta -o data/uniprot/sprot_db_current_cdhit95 \
+         -c 0.95 -T 24 -g 1 -G 0 -aS 0.8 -d 0 -p 1 -M 0        
+```
+
 ### SAFPredDB <a name="safpreddb"></a>
 
 The synteny database, SAFPredDB, is based on the entire Genome Taxonomy Database (GTDB Release 202, retrieved on 31/03/2022). You can find the current release, as well as the previous versions of GTDB [here](https://gtdb.ecogenomic.org/). Our synteny database will be uploaded to the TU Delft repositories soon. 
