@@ -46,7 +46,7 @@ def main():
     db_emb_path = args.db_emb_path
     emb_model = args.emb_model
     output_path = args.output
-
+    nn_percentile = args.nn_percentile
     predictions_path = os.path.join(output_path, 'safpred_predictions_normalized.pkl')
 
     if emb_model == 'none':
@@ -82,7 +82,8 @@ def main():
     nn_dict, db_df = safpred_utils.assign_regions(db_path, db_emb_path, test_embeddings=test_embeddings, 
                                                   keep_clusters=None, norm_sim=args.norm_sim, 
                                                   keep_singletons=args.keep_singletons, th_set='synteny', nn_set='synteny')
-    safprednn_predictions = safpred_utils.safprednn(annot_file_path, train_embeddings, test_embeddings)
+    safprednn_predictions = safpred_utils.safprednn(annot_file_path, train_embeddings, test_embeddings, 
+                                                    percentile=nn_percentile)
     safpredsynteny_predictions = safpred_utils.predict_from_avg_synteny(cluster2go, db_df, nn_dict)
     predictions = safpred_utils.combine_predictors(test_proteins, safprednn_predictions, safpredsynteny_predictions)
     prop_predictions = pred_utils.propagate_predictions(predictions, remove_root=True)    
