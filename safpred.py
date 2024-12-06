@@ -33,9 +33,9 @@ def main():
                         help = 'Path to the test embeddings, required only if you want to use your own')
     parser.add_argument('--nn_percentile', '-p', type=float, default=99.999, 
                         help = 'Percentile for the NN thresholds. Default is 99.999')
-    parser.add_argument('--norm_sim', '-n', action='store_true', 
+    parser.add_argument('--norm_sim', '-n', action='store_false', 
                         help = 'Normalize NN similarities. Default is True')
-    parser.add_argument('--keep_singletons', '-k', action='store_true', 
+    parser.add_argument('--keep_singletons', '-k', action='store_false', 
                         help = 'Keep singleton entries in the synteny database. Default is True')    
 
     args = parser.parse_args()
